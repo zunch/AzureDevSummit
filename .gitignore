@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 appsettings.json
+/MAF/Examples/Example09_AgentInWorkflow - Copy.cs
