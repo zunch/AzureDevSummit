@@ -6,6 +6,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
+using ModelContextProtocol.Client;
 using OpenAI;
 using OpenAI.Chat;
 using System;
@@ -21,10 +22,12 @@ namespace MAF.Examples
     public class Example09_AgentInWorkflow
     {
         private readonly AzureOpenAISettings _settings;
-        
-        public Example09_AgentInWorkflow(AzureOpenAISettings settings)
+        private readonly GitHubMCPSettings _gitHubMCPSettings;
+
+        public Example09_AgentInWorkflow(AzureOpenAISettings settings, GitHubMCPSettings gitHubMCPSettings)
         {
             _settings = settings;
+            _gitHubMCPSettings = gitHubMCPSettings;
         }
 
         public async Task RunAsync()
@@ -41,6 +44,30 @@ namespace MAF.Examples
 
             try
             {
+                // Create an MCPClient for the GitHub server
+                await using var mcpGitHub = await McpClient.CreateAsync(new StdioClientTransport(new()
+                {
+                    Name = "MCPServer",
+                    Command = "npx",
+                    Arguments = ["-y", "--verbose", "@modelcontextprotocol/server-github"],
+                    EnvironmentVariables = new Dictionary<string, string>
+                    {
+                        ["GITHUB_PERSONAL_ACCESS_TOKEN"] = _gitHubMCPSettings.GitHubPersonalAccessToken
+                    }
+                }));
+
+                await using var mcpFileSystem = await McpClient.CreateAsync(new StdioClientTransport(new()
+                {
+                    Name = "MCPFileSystem",
+                    Command = "npx",
+                    Arguments = ["-y", "--verbose", "@modelcontextprotocol/server-filesystem", "c:/tmp"]
+                }));
+
+
+                // Retrieve the list of tools available on the GitHub server
+                var mcpGitHubTools = await mcpGitHub.ListToolsAsync().ConfigureAwait(false);
+                var mcpFileSystemTools = await mcpFileSystem.ListToolsAsync().ConfigureAwait(false);
+
                 var chatClient = new AzureOpenAIClient(
                     new Uri(_settings.Endpoint),
                     new AzureCliCredential())
@@ -83,7 +110,14 @@ Your code should:
 - Use modern language features
 - Be production quality
 
-Produce ONLY code with necessary comments."
+Produce ONLY code with necessary comments.
+When all code is ready, 
+create the solution files in c:\tmp folder
+initiate git in the folder
+push the files to a new repository on GitHub,
+respond with 'CODE COMPLETE'.
+",
+                    tools: [.. mcpGitHubTools.Cast<AITool>(), .. mcpFileSystemTools.Cast<AITool>()]
                 );
 
                 AIAgent reviewerAgent = chatClient.CreateAIAgent(

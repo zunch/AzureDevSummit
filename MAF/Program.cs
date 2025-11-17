@@ -236,7 +236,8 @@ class Program
         try
         {
             var settings = configService.GetAzureOpenAISettings();
-            var example = new Example09_AgentInWorkflow(settings);
+            var githubSettings = configService.GetGitHubMCPSettings();
+            var example = new Example09_AgentInWorkflow(settings, githubSettings);
             await example.RunAsync();
         }
         catch (Exception ex)

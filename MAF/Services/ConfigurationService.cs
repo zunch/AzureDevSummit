@@ -27,7 +27,14 @@ public class ConfigurationService
         ValidateAzureOpenAISettings(settings);
         return settings;
     }
-    
+
+    public GitHubMCPSettings GetGitHubMCPSettings()
+    {
+        var settings = new GitHubMCPSettings();
+        _configuration.GetSection(GitHubMCPSettings.SectionName).Bind(settings);
+        return settings;
+    }
+
     private static void ValidateAzureAISettings(AzureAISettings settings)
     {
         var missingSettings = new List<string>();

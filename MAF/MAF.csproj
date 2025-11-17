@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 	  <Compile Remove="Examples\Example02_UseExistingAgent.cs" />
+	  <Compile Remove="Examples\Example09_AgentInWorkflow - Copy.cs" />
 	  <Compile Remove="Examples\Example12_Observability.cs" />
 	</ItemGroup>
 

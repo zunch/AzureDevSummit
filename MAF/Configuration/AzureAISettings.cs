@@ -19,3 +19,11 @@ public class AzureOpenAISettings
     public string ApiKey { get; set; } = string.Empty;
     public string ApiVersion { get; set; } = "2024-07-01-preview";
 }
+
+public class  GitHubMCPSettings
+{
+    public const string SectionName = "GitHubMCP";
+
+    public string GitHubPersonalAccessToken { get; set; } = string.Empty;
+
+}
